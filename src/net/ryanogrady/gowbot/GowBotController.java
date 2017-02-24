@@ -6,6 +6,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import net.ryanogrady.gowbot.Board.Position;
+
 
 public class GowBotController {
 	
@@ -15,21 +17,24 @@ public class GowBotController {
 		while(!done) {
 			
 			int[][] a = new int[][] { 
-					{ 5, 1, 1, 5, 1, 2, 5, 5 },
-					{ 1, 2, 5, 1, 5, 6, 1, 3 }, 
-					{ 5, 1, 2, 3, 4, 5, 3, 7 },
-					{ 1, 2, 3, 4, 5, 6, 1, 5 }, 
-					{ 5, 1, 2, 3, 1, 1, 7, 1 },
-					{ 1, 2, 3, 4, 5, 1, 1, 5 }, 
-					{ 5, 1, 2, 3, 4, 5, 1, 7 },
-					{ 1, 2, 3, 4, 1, 1, 5, 5 }};
+					{ 1, 2, 1, 1, 2, 2, 1, 2 },
+					{ 2, 1, 2, 2, 1, 1, 2, 1 }, 
+					{ 1, 2, 1, 1, 2, 2, 1, 2 },
+					{ 2, 1, 2, 2, 1, 1, 2, 1 }, 
+					{ 1, 2, 1, 1, 2, 2, 1, 2 },
+					{ 2, 1, 2, 2, 1, 1, 2, 1 },  
+					{ 1, 2, 1, 1, 2, 2, 1, 2 },
+					{ 2, 1, 2, 2, 1, 1, 2, 1 }};
 
 			Board b = Board.fromArray(a);
-			displayImage(b.toImage());
-			
+//			b.swap(b.new Position(6, 0), b.new Position(6, 1));
+//			displayImage(b.toImage());
+//			b.removeMatches(false);
+//			displayImage(b.toImage());
+//			b.removeMatches(false);
+//			displayImage(b.toImage());
+			b.findBestMove();
 
-			b.findMove();
-			
 			return;
 		}
 	}
