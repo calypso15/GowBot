@@ -8,7 +8,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Board {
+	static Logger logger = LogManager.getLogger(Board.class);
 
 	private final int width;
 	private final int height;
@@ -107,25 +111,25 @@ public class Board {
 
 				p1 = new Position(r, c);
 				p2 = new Position(r + 1, c);
-				System.out.println(p1 + " -> " + p2);
+				logger.debug(p1 + " -> " + p2);
 				swap(p1, p2);
 				if ((current = evaluate()) > 0) {
-					System.out.println("Score: " + current);
+					logger.debug("Score: " + current);
 				}
 				unswap(p1, p2);
 
 				p2 = new Position(r, c + 1);
-				System.out.println(p1 + " -> " + p2);
+				logger.debug(p1 + " -> " + p2);
 				swap(p1, p2);
 				if ((current = evaluate()) > 0) {
-					System.out.println("Score: " + current);
+					logger.debug("Score: " + current);
 				}
 				unswap(p1, p2);
 			}
 		}
 
 		long endTime = System.currentTimeMillis();
-		System.out.println("findMove() completed in " + (endTime - startTime)
+		logger.debug("findMove() completed in " + (endTime - startTime)
 				+ " milliseconds");
 	}
 
@@ -153,15 +157,17 @@ public class Board {
 						value += 10.0;
 					}
 					
-					System.out.println(result.toString());
+					logger.debug(result.toString());
 					allMatches.addAll(result.matches);
 				}
 			}
 		}
 
+		StringBuilder sb = new StringBuilder();
 		for (Position p : allMatches) {
-			System.out.println(p);
+			sb.append(p+" ");
 		}
+		logger.debug(sb.toString());
 
 		return value;
 	}
