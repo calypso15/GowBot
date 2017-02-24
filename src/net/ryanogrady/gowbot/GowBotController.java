@@ -1,15 +1,10 @@
 package net.ryanogrady.gowbot;
 
 import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.io.File;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-
-import net.ryanogrady.gowbot.Board.Position;
 
 
 public class GowBotController {
@@ -18,13 +13,6 @@ public class GowBotController {
 	
 	public void run() {
 		while(!done) {
-
-			BufferedImage image = null;
-			try {
-				image = ImageIO.read(new File("resources/screen1.jpg"));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 			
 			int[][] a = new int[][] { 
 					{ 5, 1, 1, 5, 1, 2, 5, 5 },

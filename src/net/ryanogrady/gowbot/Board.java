@@ -4,7 +4,11 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -56,7 +60,7 @@ public class Board {
 			return retval;
 		}
 	}
-	
+
 	public boolean getChanged(Position p) {
 		if (p.row < 0 || p.row >= height || p.col < 0 || p.col >= width) {
 			return false;
@@ -64,7 +68,7 @@ public class Board {
 			return (changed[p.row][p.col]);
 		}
 	}
-	
+
 	public void setChanged(Position p, boolean val) {
 		if (p.row < 0 || p.row >= height || p.col < 0 || p.col >= width) {
 			return;
@@ -74,8 +78,7 @@ public class Board {
 	}
 
 	public boolean swap(Position p1, Position p2) {
-		if (p1.row >= height || p1.col >= width || p2.row >= height
-				|| p2.col >= width) {
+		if (p1.row >= height || p1.col >= width || p2.row >= height || p2.col >= width) {
 			return false;
 		}
 
@@ -86,7 +89,7 @@ public class Board {
 		GemColor temp = board[p1.row][p1.col];
 		set(p1, get(p2));
 		set(p2, temp);
-		
+
 		changed[p1.row][p1.col] = true;
 		changed[p2.row][p2.col] = true;
 
@@ -101,7 +104,7 @@ public class Board {
 	}
 
 	public void findMove() {
-		long startTime = System.currentTimeMillis();
+		Instant start = Instant.now();
 
 		Position p1, p2;
 		double current;
@@ -128,9 +131,8 @@ public class Board {
 			}
 		}
 
-		long endTime = System.currentTimeMillis();
-		logger.debug("findMove() completed in " + (endTime - startTime)
-				+ " milliseconds");
+		Instant end = Instant.now();
+		logger.info("findMove() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
 	}
 
 	public double evaluate() {
@@ -139,37 +141,47 @@ public class Board {
 
 	public double evaluate(double[] weight) {
 		double value = 0;
+		MatchResult[] results = findMatches();
 		Set<Position> allMatches = new TreeSet<Position>();
+
+		for (MatchResult result : results) {
+			for (GemColor g : GemColor.values()) {
+				if (g != GemColor.INVALID) {
+					value += result.get(g) * weight[g.getValue()];
+				}
+			}
+
+			if (result.get(4) > 0 || result.get(5) > 0) {
+				value += 10.0;
+			}
+
+			logger.debug(result.toString());
+			allMatches.addAll(result.matches);
+		}
+
+		StringBuilder sb = new StringBuilder();
+		for (Position p : allMatches) {
+			sb.append(p + " ");
+		}
+		logger.debug(sb.toString());
+
+		return value;
+	}
+
+	public MatchResult[] findMatches() {
+		List<MatchResult> matches = new ArrayList<MatchResult>();
 
 		for (int r = 0; r < getHeight(); ++r) {
 			for (int c = 0; c < getWidth(); ++c) {
 				if (changed[r][c]) {
 					MatchResult result = new MatchResult();
 					match(new Position(r, c), result);
-					
-					for(GemColor g : GemColor.values()) {
-						if(g != GemColor.INVALID) {
-							value += result.get(g) * weight[g.getValue()];
-						}
-					}
-					
-					if(result.get(4) > 0 || result.get(5) > 0) {
-						value += 10.0;
-					}
-					
-					logger.debug(result.toString());
-					allMatches.addAll(result.matches);
+					matches.add(result);
 				}
 			}
 		}
 
-		StringBuilder sb = new StringBuilder();
-		for (Position p : allMatches) {
-			sb.append(p+" ");
-		}
-		logger.debug(sb.toString());
-
-		return value;
+		return matches.toArray(new MatchResult[0]);
 	}
 
 	private void match(Position p, MatchResult result) {
@@ -224,7 +236,7 @@ public class Board {
 		}
 
 		if (rowCount >= 3) {
-			
+
 			for (Position rm : rowMatches) {
 				if (changed[rm.row][rm.col]) {
 					match(rm, result);
@@ -243,12 +255,12 @@ public class Board {
 				}
 			}
 		}
-		
-		if(rowCount >= 3 && colCount >= 3) {
+
+		if (rowCount >= 3 && colCount >= 3) {
 			result.add(rowCount + colCount - 1);
-		} else if(rowCount >= 3) {
+		} else if (rowCount >= 3) {
 			result.add(rowCount);
-		} else if(colCount >= 3) {
+		} else if (colCount >= 3) {
 			result.add(colCount);
 		}
 
@@ -258,25 +270,24 @@ public class Board {
 	public static Board fromImage(Image img) {
 		return null;
 	}
-	
+
 	public static Board fromArray(int[][] array) {
 		Board b = new Board();
-		
+
 		b.board = new GemColor[array.length][];
-		for(int r = 0; r < array.length; ++r) {
+		for (int r = 0; r < array.length; ++r) {
 			b.board[r] = new GemColor[array[r].length];
-			
-			for(int c = 0; c < array[r].length; ++c) {
+
+			for (int c = 0; c < array[r].length; ++c) {
 				b.board[r][c] = GemColor.fromInt(array[r][c]);
 			}
 		}
-		
+
 		return b;
 	}
 
 	public Image toImage() {
-		BufferedImage img = new BufferedImage(320, 320,
-				BufferedImage.TYPE_INT_RGB);
+		BufferedImage img = new BufferedImage(320, 320, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = img.createGraphics();
 
 		for (int row = 0; row < height; ++row) {
@@ -285,8 +296,7 @@ public class Board {
 				g.setColor(c);
 				g.fillOval(4 + 40 * col, 4 + 40 * row, 32, 32);
 				g.setColor(Color.black);
-				g.drawString(new Position(row, col).toString(), 6 + 40 * col,
-						24 + 40 * row);
+				g.drawString(new Position(row, col).toString(), 6 + 40 * col, 24 + 40 * row);
 			}
 		}
 
@@ -305,8 +315,7 @@ public class Board {
 		@Override
 		public String toString() {
 			StringBuilder sb = new StringBuilder();
-			return sb.append("(").append(row).append(",").append(col)
-					.append(")").toString();
+			return sb.append("(").append(row).append(",").append(col).append(")").toString();
 		}
 
 		@Override
@@ -341,13 +350,13 @@ public class Board {
 	public class MatchResult {
 		private int red, green, blue, purple, yellow, brown, skull;
 		private int three, four, five;
-		
+
 		private Set<Position> matches = new HashSet<Position>();
-		
+
 		public MatchResult() {
 			red = green = blue = purple = yellow = brown = skull = three = four = five = 0;
 		}
-		
+
 		public int get(GemColor c) {
 			switch (c) {
 			case RED:
@@ -368,11 +377,11 @@ public class Board {
 			case INVALID:
 			default:
 				break;
-			}	
-			
+			}
+
 			return 0;
 		}
-		
+
 		public int get(int c) {
 			switch (c) {
 			case 3:
@@ -383,24 +392,24 @@ public class Board {
 				return five;
 			default:
 				break;
-			}	
-			
+			}
+
 			return 0;
 		}
-		
+
 		public void add(GemColor c, Set<Position> s) {
-			for(Position p : s) {
+			for (Position p : s) {
 				add(c, p);
 			}
-			
+
 			add(c, s.size());
 		}
-		
+
 		public void add(GemColor c, Position p) {
 			matches.add(p);
 			add(c, 1);
 		}
-		
+
 		private void add(GemColor c, int n) {
 			switch (c) {
 			case RED:
@@ -429,34 +438,34 @@ public class Board {
 			default:
 				break;
 			}
-			
+
 			add(n);
 		}
-		
+
 		private void add(int c) {
-			if(c == 3) {
+			if (c == 3) {
 				three++;
-			} else if(c == 4) {
+			} else if (c == 4) {
 				four++;
-			} else if(c >= 5) {
+			} else if (c >= 5) {
 				five++;
 			}
 		}
-		
+
 		@Override
 		public String toString() {
 			StringBuilder sb = new StringBuilder();
-			sb.append("R: "+red);
-			sb.append(" G: "+green);
-			sb.append(" B: "+blue);
-			sb.append(" P: "+purple);
-			sb.append(" Y: "+yellow);
-			sb.append(" N: "+brown);
-			sb.append(" S: "+skull);
-			sb.append(" III: "+three);
-			sb.append(" IV: "+four);
-			sb.append(" V+: "+five);
-			
+			sb.append("R: " + red);
+			sb.append(" G: " + green);
+			sb.append(" B: " + blue);
+			sb.append(" P: " + purple);
+			sb.append(" Y: " + yellow);
+			sb.append(" N: " + brown);
+			sb.append(" S: " + skull);
+			sb.append(" III: " + three);
+			sb.append(" IV: " + four);
+			sb.append(" V+: " + five);
+
 			return sb.toString();
 		}
 	}
