@@ -19,7 +19,7 @@ import org.apache.logging.log4j.Logger;
 public class Board {
 	static Logger logger = LogManager.getLogger(Board.class);
 
-	private final int width; 
+	private final int width;
 	private final int height;
 	private GemColor[][] board;
 	private boolean[][] changed;
@@ -55,38 +55,56 @@ public class Board {
 		return height;
 	}
 
-	public GemColor get(Position p) {
-		if (p.row < 0 || p.row >= height || p.col < 0 || p.col >= width) {
+	public GemColor get(int r, int c) {
+		if (r < 0 || r >= height || c < 0 || c >= width) {
 			return GemColor.INVALID;
 		} else {
-			return (board[p.row][p.col]);
+			return (board[r][c]);
 		}
 	}
 
-	public GemColor set(Position p, GemColor val) {
-		if (p.row < 0 || p.row >= height || p.col < 0 || p.col >= width) {
+	public GemColor get(Position p) {
+		return get(p.row, p.col);
+	}
+
+	public GemColor set(int r, int c, GemColor val) {
+		if (r < 0 || r >= height || c < 0 || c >= width) {
 			return GemColor.INVALID;
 		} else {
-			GemColor retval = board[p.row][p.col];
-			board[p.row][p.col] = val;
+			GemColor retval = board[r][c];
+			board[r][c] = val;
 			return retval;
 		}
 	}
 
-	public boolean getChanged(Position p) {
-		if (p.row < 0 || p.row >= height || p.col < 0 || p.col >= width) {
+	public GemColor set(Position p, GemColor val) {
+		return set(p.row, p.col, val);
+	}
+
+	public boolean getChanged(int r, int c) {
+		if (r < 0 || r >= height || c < 0 || c >= width) {
 			return false;
 		} else {
-			return (changed[p.row][p.col]);
+			return (changed[r][c]);
 		}
 	}
 
-	public void setChanged(Position p, boolean val) {
-		if (p.row < 0 || p.row >= height || p.col < 0 || p.col >= width) {
-			return;
+	public boolean getChanged(Position p) {
+		return getChanged(p.row, p.col);
+	}
+
+	public boolean setChanged(int r, int c, boolean val) {
+		if (r < 0 || r >= height || c < 0 || c >= width) {
+			return false;
 		} else {
-			changed[p.row][p.col] = val;
+			boolean retval = changed[r][c];
+			changed[r][c] = val;
+			return retval;
 		}
+	}
+
+	public boolean setChanged(Position p, boolean val) {
+		return setChanged(p.row, p.col, val);
 	}
 
 	public static Board fromImage(Image img) {
@@ -129,7 +147,7 @@ public class Board {
 				g.fillOval(4 + 40 * col, 4 + 40 * row, 32, 32);
 				g.setColor(Color.gray);
 
-				if (showChanged && getChanged(new Position(row, col))) {
+				if (showChanged && getChanged(row, col)) {
 					g.drawOval(4 + 40 * col, 4 + 40 * row, 32, 32);
 				}
 
@@ -197,7 +215,7 @@ public class Board {
 		Set<Position> rowMatches = new HashSet<Position>(), colMatches = new HashSet<Position>();
 
 		for (int r = p.row; r >= 0; --r) {
-			if (get(new Position(r, p.col)) == color) {
+			if (get(r, p.col) == color) {
 				rowMatches.add(new Position(r, p.col));
 			} else {
 				break;
@@ -205,7 +223,7 @@ public class Board {
 		}
 
 		for (int r = p.row + 1; r < height; ++r) {
-			if (get(new Position(r, p.col)) == color) {
+			if (get(r, p.col) == color) {
 				rowMatches.add(new Position(r, p.col));
 			} else {
 				break;
@@ -213,7 +231,7 @@ public class Board {
 		}
 
 		for (int c = p.col; c >= 0; --c) {
-			if (get(new Position(p.row, c)) == color) {
+			if (get(p.row, c) == color) {
 				colMatches.add(new Position(p.row, c));
 			} else {
 				break;
@@ -221,7 +239,7 @@ public class Board {
 		}
 
 		for (int c = p.col + 1; c < width; ++c) {
-			if (get(new Position(p.row, c)) == color) {
+			if (get(p.row, c) == color) {
 				colMatches.add(new Position(p.row, c));
 			} else {
 				break;
@@ -289,25 +307,25 @@ public class Board {
 		return matches.toArray(new MatchResult[0]);
 	}
 
-	public void collapse() {
+	private void collapse() {
 		for (int c = 0; c < width; ++c) {
 			for (int r = height - 1; r > 0; --r) {
-				if (get(new Position(r, c)) == GemColor.UNKNOWN) {
+				if (get(r, c) == GemColor.UNKNOWN) {
 					boolean found = false;
 
 					for (int r2 = r - 1; r2 >= 0; --r2) {
-						if (get(new Position(r2, c)) != GemColor.UNKNOWN) {
+						if (get(r2, c) != GemColor.UNKNOWN) {
 							found = true;
-							set(new Position(r, c), get(new Position(r2, c)));
-							set(new Position(r2, c), GemColor.UNKNOWN);
-							setChanged(new Position(r, c), true);
+							set(r, c, get(new Position(r2, c)));
+							set(r2, c, GemColor.UNKNOWN);
+							setChanged(r, c, true);
 							break;
 						}
 					}
 
 					if (!found) {
-						set(new Position(r, c), GemColor.UNKNOWN);
-						setChanged(new Position(r, c), true);
+						set(r, c, GemColor.UNKNOWN);
+						setChanged(r, c, true);
 					}
 				}
 			}
@@ -380,21 +398,29 @@ public class Board {
 		return b.evaluate();
 	}
 
-	public void findBestMove() {
+	/**
+	 * Evaluates every possible move on a board to determine which move has the
+	 * highest weighted value.
+	 */
+	public Position[] findBestMove() {
 		logger.info("findBestMove() started");
 		Instant start = Instant.now();
 
+		Position[] retval = null;
 		Position p1, p2;
 		double current, currentBest = 0.0;
 		Position currentBestP1 = null, currentBestP2 = null;
 
+		// Loop over every position on the game board
 		for (int r = 0; r < getHeight(); ++r) {
 			for (int c = 0; c < getWidth(); ++c) {
 				p1 = new Position(r, c);
 				p2 = new Position(r + 1, c);
-				GemColor g = get(p1);
+				GemColor g1 = get(p1);
+				GemColor g2 = get(p2);
 
-				if (get(new Position(r + 1, c - 1)) == g || get(new Position(r + 1, c + 1)) == g) {
+				//
+				if (get(r + 1, c - 1) == g1 || get(r + 1, c + 1) == g1 || get(r, c - 1) == g2 || get(r, c + 1) == g2) {
 
 					logger.debug(p1 + " -> " + p2);
 					current = evaluateMove(p1, p2);
@@ -409,7 +435,9 @@ public class Board {
 				}
 
 				p2 = new Position(r, c + 1);
-				if (get(new Position(r - 1, c + 1)) == g || get(new Position(r + 1, c + 1)) == g) {
+				g2 = get(p2);
+
+				if (get(r - 1, c + 1) == g1 || get(r + 1, c + 1) == g1 || get(r - 1, c) == g2 || get(r + 1, c) == g2) {
 					logger.debug(p1 + " -> " + p2);
 					current = evaluateMove(p1, p2);
 					logger.debug("Score: " + current + System.lineSeparator());
@@ -426,56 +454,22 @@ public class Board {
 
 		if (currentBestP1 != null && currentBestP2 != null) {
 			logger.info("Best move " + currentBestP1 + " -> " + currentBestP2 + " has a score of " + currentBest);
+			retval = new Position[2];
+			retval[0] = currentBestP1;
+			retval[1] = currentBestP2;
 		} else {
 			logger.info("No best move found.");
 		}
 
 		Instant end = Instant.now();
 		logger.info("findBestMove() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
+
+		return retval;
 	}
 
-	public class Position implements Comparable<Position> {
-		public final int row;
-		public final int col;
-
-		public Position(int r, int c) {
-			row = r;
-			col = c;
-		}
-
-		@Override
-		public String toString() {
-			StringBuilder sb = new StringBuilder();
-			return sb.append("(").append(row).append(",").append(col).append(")").toString();
-		}
-
-		@Override
-		public boolean equals(Object other) {
-			boolean result = false;
-			if (other instanceof Position) {
-				Position that = (Position) other;
-				result = (that.canEqual(this) && this.row == that.row && this.col == that.col);
-			}
-			return result;
-		}
-
-		@Override
-		public int hashCode() {
-			return (37 * (41 + 37 * row) + col);
-		}
-
-		public boolean canEqual(Object other) {
-			return (other instanceof Position);
-		}
-
-		@Override
-		public int compareTo(Position o) {
-			if (this.row != o.row) {
-				return this.row - o.row;
-			} else {
-				return this.col - o.col;
-			}
-		}
+	public void move(Position p1, Position p2) {
+		swap(p1, p2);
+		removeMatches(true);
 	}
 
 	public class MatchResult {
