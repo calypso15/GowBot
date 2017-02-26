@@ -19,7 +19,7 @@ import org.apache.logging.log4j.Logger;
 public class Board {
 	static Logger logger = LogManager.getLogger(Board.class);
 
-	private final int width;
+	private final int width; 
 	private final int height;
 	private GemColor[][] board;
 	private boolean[][] changed;
@@ -35,12 +35,12 @@ public class Board {
 		board = new GemColor[w][h];
 		changed = new boolean[w][h];
 	}
-	
+
 	public Board(Board b) {
 		this(b.width, b.height);
-		
-		for(int r = 0; r < width; ++r) {
-			for(int c = 0; c < height; ++c) {
+
+		for (int r = 0; r < width; ++r) {
+			for (int c = 0; c < height; ++c) {
 				board[r][c] = b.board[r][c];
 				changed[r][c] = b.changed[r][c];
 			}
@@ -109,12 +109,18 @@ public class Board {
 	}
 
 	public Image toImage() {
+		return toImage(false, false);
+	}
+
+	public Image toImage(boolean showMatches, boolean showChanged) {
 		logger.info("removeMatches() started");
 		Instant start = Instant.now();
-		
+
 		BufferedImage img = new BufferedImage(320, 320, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = img.createGraphics();
 		g.setStroke(new BasicStroke(3));
+
+		MatchResult[] m = null;
 
 		for (int row = 0; row < height; ++row) {
 			for (int col = 0; col < width; ++col) {
@@ -122,16 +128,28 @@ public class Board {
 				g.setColor(c);
 				g.fillOval(4 + 40 * col, 4 + 40 * row, 32, 32);
 				g.setColor(Color.gray);
-				
-				if(getChanged(new Position(row, col))) {
+
+				if (showChanged && getChanged(new Position(row, col))) {
 					g.drawOval(4 + 40 * col, 4 + 40 * row, 32, 32);
 				}
-				
+
 				g.setColor(Color.black);
 				g.drawString(new Position(row, col).toString(), 6 + 40 * col, 24 + 40 * row);
 			}
 		}
-		
+
+		if (showMatches) {
+			g.setColor(Color.orange);
+
+			m = findMatches();
+
+			for (MatchResult result : m) {
+				for (Position p : result.positions) {
+					g.drawOval(4 + 40 * p.col, 4 + 40 * p.row, 32, 32);
+				}
+			}
+		}
+
 		Instant end = Instant.now();
 		logger.info("toImage() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
 
@@ -249,37 +267,50 @@ public class Board {
 	public MatchResult[] findMatches() {
 		logger.info("findMatches() started");
 		Instant start = Instant.now();
-		
-		List<MatchResult> matches = new ArrayList<MatchResult>();
+
+		Set<MatchResult> matches = new HashSet<MatchResult>();
 
 		for (int r = 0; r < getHeight(); ++r) {
 			for (int c = 0; c < getWidth(); ++c) {
 				if (changed[r][c]) {
 					MatchResult result = new MatchResult();
 					match(new Position(r, c), result);
-					
-					if(result.getPositions().length > 0) {
+
+					if (result.getPositions().length > 0) {
 						matches.add(result);
 					}
 				}
 			}
 		}
-		
+
 		Instant end = Instant.now();
 		logger.info("findMatches() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
 
 		return matches.toArray(new MatchResult[0]);
 	}
 
-	private void removeMatch(MatchResult result) {
-		for (Position p : result.getPositions()) {
-			for (int r = p.row; r > 0; --r) {
-				set(new Position(r, p.col), get(new Position(r - 1, p.col)));
-				setChanged(new Position(r, p.col), true);
-			}
+	public void collapse() {
+		for (int c = 0; c < width; ++c) {
+			for (int r = height - 1; r > 0; --r) {
+				if (get(new Position(r, c)) == GemColor.UNKNOWN) {
+					boolean found = false;
 
-			set(new Position(0, p.col), GemColor.UNKNOWN);
-			setChanged(new Position(0, p.col), true);
+					for (int r2 = r - 1; r2 >= 0; --r2) {
+						if (get(new Position(r2, c)) != GemColor.UNKNOWN) {
+							found = true;
+							set(new Position(r, c), get(new Position(r2, c)));
+							set(new Position(r2, c), GemColor.UNKNOWN);
+							setChanged(new Position(r, c), true);
+							break;
+						}
+					}
+
+					if (!found) {
+						set(new Position(r, c), GemColor.UNKNOWN);
+						setChanged(new Position(r, c), true);
+					}
+				}
+			}
 		}
 	}
 
@@ -287,24 +318,28 @@ public class Board {
 		logger.info("removeMatches() started");
 		Instant start = Instant.now();
 
-		Set<MatchResult> retval = new HashSet<MatchResult>();
 		MatchResult[] results;
+		List<MatchResult> allResults = new ArrayList<MatchResult>();
 
 		do {
 			results = findMatches();
+			;
 
 			for (MatchResult result : results) {
-				logger.debug(result.toString());
-				retval.add(result);
-				removeMatch(result);
+				for (Position p : result.positions) {
+					set(p, GemColor.UNKNOWN);
+				}
+
+				allResults.add(result);
 			}
+
+			collapse();
 		} while (cascading && results.length > 0);
-		
 
 		Instant end = Instant.now();
 		logger.info("removeMatches() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
-		
-		return retval.toArray(new MatchResult[0]);
+
+		return allResults.toArray(new MatchResult[0]);
 	}
 
 	private double evaluate() {
@@ -315,7 +350,7 @@ public class Board {
 		double value = 0;
 		MatchResult[] results = removeMatches(true);
 		Set<Position> allMatches = new TreeSet<Position>();
-		
+
 		boolean extraTurn = false;
 
 		for (MatchResult result : results) {
@@ -331,14 +366,14 @@ public class Board {
 
 			allMatches.addAll(result.positions);
 		}
-		
-		if(extraTurn) {
+
+		if (extraTurn) {
 			value += 10.0;
 		}
 
 		return value;
 	}
-	
+
 	public double evaluateMove(Position p1, Position p2) {
 		Board b = new Board(this);
 		b.swap(p1, p2);
@@ -357,28 +392,39 @@ public class Board {
 			for (int c = 0; c < getWidth(); ++c) {
 				p1 = new Position(r, c);
 				p2 = new Position(r + 1, c);
-				logger.debug(p1 + " -> " + p2);
-				current = evaluateMove(p1, p2);
-				logger.debug("Score: " + current + System.lineSeparator());
-				if(current > currentBest) {
-					currentBest = current;
-					currentBestP1 = p1;
-					currentBestP2 = p2;
+				GemColor g = get(p1);
+
+				if (get(new Position(r + 1, c - 1)) == g || get(new Position(r + 1, c + 1)) == g) {
+
+					logger.debug(p1 + " -> " + p2);
+					current = evaluateMove(p1, p2);
+					logger.debug("Score: " + current + System.lineSeparator());
+					if (current > currentBest) {
+						currentBest = current;
+						currentBestP1 = p1;
+						currentBestP2 = p2;
+					}
+				} else {
+					logger.debug("Skipping " + p1 + " -> " + p2);
 				}
 
 				p2 = new Position(r, c + 1);
-				logger.debug(p1 + " -> " + p2);
-				current = evaluateMove(p1, p2);
-				logger.debug("Score: " + current + System.lineSeparator());
-				if(current > currentBest) {
-					currentBest = current;
-					currentBestP1 = p1;
-					currentBestP2 = p2;
+				if (get(new Position(r - 1, c + 1)) == g || get(new Position(r + 1, c + 1)) == g) {
+					logger.debug(p1 + " -> " + p2);
+					current = evaluateMove(p1, p2);
+					logger.debug("Score: " + current + System.lineSeparator());
+					if (current > currentBest) {
+						currentBest = current;
+						currentBestP1 = p1;
+						currentBestP2 = p2;
+					}
+				} else {
+					logger.debug("Skipping " + p1 + " -> " + p2);
 				}
 			}
 		}
-		
-		if(currentBestP1 != null && currentBestP2 != null) {
+
+		if (currentBestP1 != null && currentBestP2 != null) {
 			logger.info("Best move " + currentBestP1 + " -> " + currentBestP2 + " has a score of " + currentBest);
 		} else {
 			logger.info("No best move found.");
@@ -415,7 +461,7 @@ public class Board {
 
 		@Override
 		public int hashCode() {
-			return (41 * (41 + row) + col);
+			return (37 * (41 + 37 * row) + col);
 		}
 
 		public boolean canEqual(Object other) {
@@ -493,7 +539,7 @@ public class Board {
 		}
 
 		public void add(GemColor c, Position p) {
-			if(!positions.contains(p)) {
+			if (!positions.contains(p)) {
 				positions.add(p);
 				add(c, 1);
 			}
@@ -556,11 +602,36 @@ public class Board {
 			sb.append(" V+: " + five);
 			sb.append("; ");
 
-			for(Position p : positions) {
+			for (Position p : positions) {
 				sb.append(p.toString());
 			}
 
 			return sb.toString();
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			boolean result = false;
+			if (other instanceof MatchResult) {
+				MatchResult that = (MatchResult) other;
+				result = (that.canEqual(this) && this.positions.equals(that.positions));
+			}
+			return result;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = 41;
+
+			for (Position p : positions) {
+				result = 37 * result + p.hashCode();
+			}
+
+			return result;
+		}
+
+		public boolean canEqual(Object other) {
+			return (other instanceof MatchResult);
 		}
 	}
 }

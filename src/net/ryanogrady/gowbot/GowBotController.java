@@ -6,9 +6,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-import net.ryanogrady.gowbot.Board.Position;
-
-
 public class GowBotController {
 	
 	boolean done = false;
@@ -17,23 +14,27 @@ public class GowBotController {
 		while(!done) {
 			
 			int[][] a = new int[][] { 
-					{ 1, 2, 1, 1, 2, 2, 1, 2 },
-					{ 2, 1, 2, 2, 1, 1, 2, 1 }, 
-					{ 1, 2, 1, 1, 2, 2, 1, 2 },
-					{ 2, 1, 2, 2, 1, 1, 2, 1 }, 
-					{ 1, 2, 1, 1, 2, 2, 1, 2 },
-					{ 2, 1, 2, 2, 1, 1, 2, 1 },  
-					{ 1, 2, 1, 1, 2, 2, 1, 2 },
-					{ 2, 1, 2, 2, 1, 1, 2, 1 }};
+					{ 1, 2, 3, 4, 1, 2, 3, 4 },
+					{ 4, 5, 6, 7, 4, 5, 6, 7 }, 
+					{ 1, 2, 3, 4, 1, 2, 3, 4 },
+					{ 4, 5, 6, 7, 4, 5, 6, 7 }, 
+					{ 1, 2, 3, 4, 1, 2, 3, 4 },
+					{ 4, 5, 6, 7, 4, 5, 6, 7 }, 
+					{ 1, 2, 3, 4, 1, 2, 3, 4 },
+					{ 4, 5, 6, 7, 4, 5, 6, 7 }};
+			
+//					{ 1, 2, 1, 1, 2, 2, 1, 2 },
+//					{ 2, 1, 2, 2, 1, 1, 2, 1 }, 
+//					{ 1, 2, 1, 1, 2, 2, 1, 2 },
+//					{ 2, 1, 2, 2, 1, 1, 2, 1 }, 
+//					{ 1, 2, 1, 1, 2, 2, 1, 2 },
+//					{ 2, 1, 2, 2, 1, 1, 2, 1 },  
+//					{ 1, 2, 1, 1, 2, 2, 1, 2 },
+//					{ 2, 1, 2, 2, 1, 1, 2, 1 }};
 
 			Board b = Board.fromArray(a);
-//			b.swap(b.new Position(6, 0), b.new Position(6, 1));
-//			displayImage(b.toImage());
-//			b.removeMatches(false);
-//			displayImage(b.toImage());
-//			b.removeMatches(false);
-//			displayImage(b.toImage());
 			b.findBestMove();
+			displayImage(b.toImage(true, true));
 
 			return;
 		}
