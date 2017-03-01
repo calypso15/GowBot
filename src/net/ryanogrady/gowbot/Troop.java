@@ -13,12 +13,28 @@ public class Troop {
 	private Map<Skill, Integer> currentSkills = new HashMap<Skill, Integer>();
 	private Kingdom kingdom;
 	private Rarity rarity;
-	private Set<String> types = new HashSet<String>();
+	private Set<TroopType> types = new HashSet<TroopType>();
 	private Set<GemColor> colors = new HashSet<GemColor>();
 	private Set<Spell> spells = new LinkedHashSet<Spell>();
 	private Set<Trait> traits = new HashSet<Trait>();
 
 	private Troop() {
+	}
+	
+	public Troop(Troop orig) {
+		if(orig == null) {
+			throw new IllegalArgumentException("Null parameter passed to copy constructor.");
+		}
+		
+		name = new String(orig.name);
+		maxSkills.putAll(orig.maxSkills);
+		currentSkills.putAll(orig.currentSkills);
+		kingdom = new Kingdom(orig.kingdom);
+		rarity = orig.rarity;
+		types.addAll(orig.types);
+		colors.addAll(orig.colors);
+		spells.addAll(orig.spells);
+		traits.addAll(orig.traits);
 	}
 
 	public String getName() {
@@ -58,7 +74,7 @@ public class Troop {
 		return rarity;
 	}
 
-	public Set<String> getTypes() {
+	public Set<TroopType> getTypes() {
 		return types;
 	}
 
@@ -99,7 +115,7 @@ public class Troop {
 
 		IBuild rarity(Rarity rarity);
 
-		IBuild addType(String type);
+		IBuild addType(TroopType type);
 
 		IBuild addColor(GemColor color);
 
@@ -160,7 +176,7 @@ public class Troop {
 		}
 
 		@Override
-		public Builder addType(String type) {
+		public Builder addType(TroopType type) {
 			instance.getTypes().add(type);
 			return this;
 		}

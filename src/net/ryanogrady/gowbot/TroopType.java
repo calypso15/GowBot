@@ -1,13 +1,13 @@
 package net.ryanogrady.gowbot;
 
-public class Kingdom {
+public class TroopType {
 	private String name;
 	
-	public Kingdom(String name) {
+	public TroopType(String name) {
 		this.name = name;
 	}
 	
-	public Kingdom(Kingdom orig) {
+	public TroopType(TroopType orig) {
 		if(orig == null) {
 			throw new IllegalArgumentException("Null parameter passed to copy constructor.");
 		}
