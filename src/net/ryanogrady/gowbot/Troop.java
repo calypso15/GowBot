@@ -50,6 +50,30 @@ public class Troop {
 		maxSkills.put(skill, 0);
 	}
 
+	public Kingdom getKingdom() {
+		return kingdom;
+	}
+
+	public Rarity getRarity() {
+		return rarity;
+	}
+
+	public Set<String> getTypes() {
+		return types;
+	}
+
+	public Set<GemColor> getColors() {
+		return colors;
+	}
+
+	public Set<Spell> getSpells() {
+		return spells;
+	}
+
+	public Set<Trait> getTraits() {
+		return traits;
+	}
+
 	public static ILife name(String name) {
 		return new Troop.Builder(name);
 	}
@@ -125,37 +149,37 @@ public class Troop {
 
 		@Override
 		public IBuild kingdom(Kingdom kingdom) {
-			instance.kingdom = kingdom;
+			instance.setKingdom(kingdom);
 			return this;
 		}
 
 		@Override
 		public IBuild rarity(Rarity rarity) {
-			instance.rarity = rarity;
+			instance.setRarity(rarity);
 			return this;
 		}
 
 		@Override
 		public Builder addType(String type) {
-			instance.types.add(type);
+			instance.getTypes().add(type);
 			return this;
 		}
 
 		@Override
 		public Builder addColor(GemColor color) {
-			instance.colors.add(color);
+			instance.getColors().add(color);
 			return this;
 		}
 
 		@Override
 		public Builder addSpell(Spell spell) {
-			instance.spells.add(spell);
+			instance.getSpells().add(spell);
 			return this;
 		}
 
 		@Override
 		public Builder addTrait(Trait trait) {
-			instance.traits.add(trait);
+			instance.getTraits().add(trait);
 			return this;
 		}
 
