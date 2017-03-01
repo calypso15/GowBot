@@ -6,12 +6,8 @@ public class Kingdom {
 	public Kingdom(String name) {
 		this.name = name;
 	}
-	
-	public Kingdom(Kingdom orig) {
-		if(orig == null) {
-			throw new IllegalArgumentException("Null parameter passed to copy constructor.");
-		}
-		
-		name = new String(orig.name);
+
+	public String getName() {
+		return name;
 	}
 }

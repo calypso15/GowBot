@@ -25,7 +25,7 @@ public class Team {
 	public boolean addTroop(Troop troop) {
 		for (int i = 0; i < MAX_TROOPS; ++i) {
 			if (troops[i] == null) {
-				troops[i] = troop;
+				troops[i] = new Troop(troop);
 				return true;
 			}
 		}

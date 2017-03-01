@@ -3,10 +3,13 @@ package net.ryanogrady.gowbot;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 public enum GemColor {
-
 	INVALID(-1), UNKNOWN(0), RED(1), GREEN(2), BLUE(3), YELLOW(4), PURPLE(5), BROWN(6), SKULL(7);
+	
+	public static final int MIN = 1;
+	public static final int MAX = 7;
 
 	private final int i;
 	private static Map<Integer, GemColor> map = new HashMap<Integer, GemColor>();
@@ -31,6 +34,10 @@ public enum GemColor {
 	
 	static GemColor fromInt(int i) {
 		return map.get(i);
+	}
+	
+	static GemColor random() {
+		return fromInt(ThreadLocalRandom.current().nextInt(MIN, MAX + 1));
 	}
 
 	static Color toColor(GemColor c) {

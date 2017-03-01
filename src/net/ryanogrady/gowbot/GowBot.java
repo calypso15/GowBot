@@ -4,7 +4,75 @@ package net.ryanogrady.gowbot;
 public class GowBot {
 
 	public static void main(String[] args) {
-		GowBotController controller = new GowBotController();
+		int[][] a = new int[][] {
+				 { 1, 2, 1, 2, 1, 2, 1, 2 },
+				 { 3, 4, 3, 1, 3, 4, 3, 4 },
+				 { 1, 2, 1, 2, 1, 2, 1, 2 },
+				 { 3, 4, 3, 1, 3, 4, 3, 4 },
+				 { 1, 2, 1, 2, 1, 2, 1, 2 },
+				 { 3, 4, 3, 4, 3, 4, 3, 4 },
+				 { 1, 2, 1, 2, 1, 2, 1, 2 },
+				 { 3, 4, 3, 4, 3, 4, 3, 4 }};
+
+//				{ 1, 1, 2, 1, 1, 2, 2, 1 }, 
+//				{ 1, 1, 2, 1, 1, 2, 2, 1 }, 
+//				{ 2, 2, 1, 2, 2, 1, 1, 2 },
+//				{ 2, 2, 1, 2, 2, 1, 1, 2 }, 
+//				{ 1, 1, 2, 1, 1, 2, 2, 1 }, 
+//				{ 1, 1, 2, 1, 1, 2, 2, 1 },
+//				{ 2, 2, 1, 2, 2, 1, 1, 2 }, 
+//				{ 1, 1, 2, 1, 1, 2, 2, 1 } };
+		
+		Board board = Board.fromArray(a);
+
+		Troop warlock = Troop.name("Warlock")
+			.life(19)
+			.attack(11)
+			.armor(8)
+			.magic(9)
+			.addColor(GemColor.BLUE)
+			.addColor(GemColor.BROWN)
+			.addSpell(new Spell())
+			.kingdom(new Kingdom("Karakoth"))
+			.addType(new TroopType("Human"))
+			.addType(new TroopType("Mystic"))
+			.rarity(Rarity.EPIC)
+			.build();
+		Troop valkyrie = Troop.name("Valkyrie")
+		.life(12)
+		.attack(10)
+		.armor(19)
+		.magic(4)
+		.addColor(GemColor.RED)
+		.addColor(GemColor.YELLOW)
+		.addSpell(new Spell())
+		.kingdom(new Kingdom("Stormheim"))
+		.addType(new TroopType("Divine"))
+		.rarity(Rarity.EPIC)
+		.build();
+		
+		Team playerTeam = new Team();
+		playerTeam.addTroop(warlock);
+		playerTeam.addTroop(warlock);
+		playerTeam.addTroop(valkyrie);
+		playerTeam.addTroop(warlock);
+		
+		Troop generic = Troop.name("Generic")
+		.life(10)
+		.attack(5)
+		.armor(5)
+		.magic(1)
+		.build();
+		
+		Team enemyTeam = new Team();
+		enemyTeam.addTroop(generic);
+		enemyTeam.addTroop(generic);
+		enemyTeam.addTroop(generic);
+		enemyTeam.addTroop(generic);
+		
+		GowGame game = new GowGame(playerTeam, enemyTeam, board);
+		
+		GowBotController controller = new GowBotController(game);
 		controller.run();
 	}
 }

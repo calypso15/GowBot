@@ -26,10 +26,10 @@ public class Troop {
 			throw new IllegalArgumentException("Null parameter passed to copy constructor.");
 		}
 		
-		name = new String(orig.name);
+		name = orig.name;
 		maxSkills.putAll(orig.maxSkills);
 		currentSkills.putAll(orig.currentSkills);
-		kingdom = new Kingdom(orig.kingdom);
+		kingdom = orig.kingdom;
 		rarity = orig.rarity;
 		types.addAll(orig.types);
 		colors.addAll(orig.colors);
@@ -74,20 +74,20 @@ public class Troop {
 		return rarity;
 	}
 
-	public Set<TroopType> getTypes() {
-		return types;
+	public TroopType[] getTypes() {
+		return types.toArray(new TroopType[0]);
 	}
 
-	public Set<GemColor> getColors() {
-		return colors;
+	public GemColor[] getColors() {
+		return colors.toArray(new GemColor[0]);
 	}
 
-	public Set<Spell> getSpells() {
-		return spells;
+	public Spell[] getSpells() {
+		return spells.toArray(new Spell[0]);
 	}
 
-	public Set<Trait> getTraits() {
-		return traits;
+	public Trait[] getTraits() {
+		return traits.toArray(new Trait[0]);
 	}
 
 	public static ILife name(String name) {
@@ -177,25 +177,25 @@ public class Troop {
 
 		@Override
 		public Builder addType(TroopType type) {
-			instance.getTypes().add(type);
+			instance.types.add(type);
 			return this;
 		}
 
 		@Override
 		public Builder addColor(GemColor color) {
-			instance.getColors().add(color);
+			instance.colors.add(color);
 			return this;
 		}
 
 		@Override
 		public Builder addSpell(Spell spell) {
-			instance.getSpells().add(spell);
+			instance.spells.add(spell);
 			return this;
 		}
 
 		@Override
 		public Builder addTrait(Trait trait) {
-			instance.getTraits().add(trait);
+			instance.traits.add(trait);
 			return this;
 		}
 

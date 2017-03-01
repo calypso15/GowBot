@@ -17,7 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class Board {
-	static Logger logger = LogManager.getLogger(Board.class);
+	static ExtLogger logger = ExtLogger.create(Board.class);
 
 	private final int width;
 	private final int height;
@@ -28,19 +28,19 @@ public class Board {
 		this(8, 8);
 	}
 
-	private Board(int w, int h) {
-		width = w;
+	private Board(int h, int w) {
 		height = h;
+		width = w;
 
-		board = new GemColor[w][h];
-		changed = new boolean[w][h];
+		board = new GemColor[h][w];
+		changed = new boolean[h][w];
 	}
 
 	public Board(Board b) {
-		this(b.width, b.height);
+		this(b.height, b.width);
 
-		for (int r = 0; r < width; ++r) {
-			for (int c = 0; c < height; ++c) {
+		for (int r = 0; r < height; ++r) {
+			for (int c = 0; c < width; ++c) {
 				board[r][c] = b.board[r][c];
 				changed[r][c] = b.changed[r][c];
 			}
@@ -102,6 +102,10 @@ public class Board {
 			return retval;
 		}
 	}
+	
+	public void clearChanged() {
+		changed = new boolean[height][width];
+	}
 
 	public boolean setChanged(Position p, boolean val) {
 		return setChanged(p.row, p.col, val);
@@ -131,7 +135,7 @@ public class Board {
 	}
 
 	public Image toImage(boolean showMatches, boolean showChanged) {
-		logger.info("removeMatches() started");
+		logger.timing("removeMatches() started");
 		Instant start = Instant.now();
 
 		BufferedImage img = new BufferedImage(320, 320, BufferedImage.TYPE_INT_RGB);
@@ -169,7 +173,7 @@ public class Board {
 		}
 
 		Instant end = Instant.now();
-		logger.info("toImage() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
+		logger.timing("toImage() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
 
 		return img;
 	}
@@ -283,7 +287,7 @@ public class Board {
 	}
 
 	public MatchResult[] findMatches() {
-		logger.info("findMatches() started");
+		logger.timing("findMatches() started");
 		Instant start = Instant.now();
 
 		Set<MatchResult> matches = new HashSet<MatchResult>();
@@ -302,12 +306,12 @@ public class Board {
 		}
 
 		Instant end = Instant.now();
-		logger.info("findMatches() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
+		logger.timing("findMatches() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
 
 		return matches.toArray(new MatchResult[0]);
 	}
 
-	private void collapse() {
+	private void collapse(ReplacementMethod method) {
 		for (int c = 0; c < width; ++c) {
 			for (int r = height - 1; r > 0; --r) {
 				if (get(r, c) == GemColor.UNKNOWN) {
@@ -330,10 +334,27 @@ public class Board {
 				}
 			}
 		}
+
+		for (int r = 0; r < height; ++r) {
+			for (int c = 0; c < width; ++c) {
+				if(get(r,c) == GemColor.UNKNOWN) {
+					setChanged(r, c, true);
+					
+					if (method == ReplacementMethod.UNKNOWN) {
+						// do nothing
+					} else if (method == ReplacementMethod.RANDOM) {
+						set(r, c, GemColor.random());
+					} else {
+						logger.warn("Unexpected ReplacementMethod '" + method.toString() + "', using UNKNOWN.");
+						// then do nothing
+					}
+				}
+			}
+		}
 	}
 
-	public MatchResult[] removeMatches(boolean cascading) {
-		logger.info("removeMatches() started");
+	private MatchResult[] removeMatches(boolean cascading, ReplacementMethod method, boolean render) {
+		logger.timing("removeMatches() started");
 		Instant start = Instant.now();
 
 		MatchResult[] results;
@@ -341,7 +362,6 @@ public class Board {
 
 		do {
 			results = findMatches();
-			;
 
 			for (MatchResult result : results) {
 				for (Position p : result.positions) {
@@ -351,11 +371,15 @@ public class Board {
 				allResults.add(result);
 			}
 
-			collapse();
+			collapse(method);
+			
+			if(render) {
+				Util.displayImage(this.toImage());
+			}
 		} while (cascading && results.length > 0);
 
 		Instant end = Instant.now();
-		logger.info("removeMatches() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
+		logger.timing("removeMatches() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
 
 		return allResults.toArray(new MatchResult[0]);
 	}
@@ -366,7 +390,7 @@ public class Board {
 
 	private double evaluate(double[] weight) {
 		double value = 0;
-		MatchResult[] results = removeMatches(true);
+		MatchResult[] results = removeMatches(true, ReplacementMethod.UNKNOWN, false);
 		Set<Position> allMatches = new TreeSet<Position>();
 
 		boolean extraTurn = false;
@@ -403,7 +427,7 @@ public class Board {
 	 * highest weighted value.
 	 */
 	public Position[] findBestMove() {
-		logger.info("findBestMove() started");
+		logger.timing("findBestMove() started");
 		Instant start = Instant.now();
 
 		Position[] retval = null;
@@ -462,14 +486,15 @@ public class Board {
 		}
 
 		Instant end = Instant.now();
-		logger.info("findBestMove() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
+		logger.timing("findBestMove() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
 
 		return retval;
 	}
 
 	public void move(Position p1, Position p2) {
+		clearChanged();
 		swap(p1, p2);
-		removeMatches(true);
+		removeMatches(true, ReplacementMethod.RANDOM, false);
 	}
 
 	public class MatchResult {
