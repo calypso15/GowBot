@@ -149,13 +149,13 @@ public class Troop {
 
 		@Override
 		public IBuild kingdom(Kingdom kingdom) {
-			instance.setKingdom(kingdom);
+			instance.kingdom = kingdom;
 			return this;
 		}
 
 		@Override
 		public IBuild rarity(Rarity rarity) {
-			instance.setRarity(rarity);
+			instance.rarity = rarity;
 			return this;
 		}
 
