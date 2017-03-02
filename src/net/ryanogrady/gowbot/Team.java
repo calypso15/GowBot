@@ -1,6 +1,9 @@
 package net.ryanogrady.gowbot;
 
-public class Team {
+import java.util.Set;
+import java.util.TreeSet;
+
+public class Team implements IEvaluator {
 	public final int MAX_TROOPS = 4;
 
 	private Troop[] troops = new Troop[MAX_TROOPS];
@@ -59,5 +62,35 @@ public class Team {
 		}
 		
 		troops = newTroops;
+	}
+
+	@Override
+	public double evaluate(MatchResult[] results) {
+		double value = 0;
+		Set<Position> allMatches = new TreeSet<Position>();
+
+		boolean extraTurn = false;
+
+		for (MatchResult result : results) {
+			for (GemColor g : GemColor.values()) {
+				if (g != GemColor.INVALID) {
+					value += result.get(g);
+				}
+			}
+
+			if (result.get(4) > 0 || result.get(5) > 0) {
+				extraTurn = true;
+			}
+			
+			for(Position p : result.getPositions()) {
+				allMatches.add(p);
+			}
+		}
+
+		if (extraTurn) {
+			value += 10.0;
+		}
+
+		return value;
 	}
 }
