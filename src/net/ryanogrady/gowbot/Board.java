@@ -13,9 +13,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 public class Board {
 	static ExtLogger logger = ExtLogger.create(Board.class);
 
@@ -67,7 +64,7 @@ public class Board {
 		return get(p.row, p.col);
 	}
 
-	public GemColor set(int r, int c, GemColor val) {
+	private GemColor set(int r, int c, GemColor val) {
 		if (r < 0 || r >= height || c < 0 || c >= width) {
 			return GemColor.INVALID;
 		} else {
@@ -77,11 +74,11 @@ public class Board {
 		}
 	}
 
-	public GemColor set(Position p, GemColor val) {
+	private GemColor set(Position p, GemColor val) {
 		return set(p.row, p.col, val);
 	}
 
-	public boolean getChanged(int r, int c) {
+	private boolean getChanged(int r, int c) {
 		if (r < 0 || r >= height || c < 0 || c >= width) {
 			return false;
 		} else {
@@ -89,11 +86,11 @@ public class Board {
 		}
 	}
 
-	public boolean getChanged(Position p) {
+	private boolean getChanged(Position p) {
 		return getChanged(p.row, p.col);
 	}
 
-	public boolean setChanged(int r, int c, boolean val) {
+	private boolean setChanged(int r, int c, boolean val) {
 		if (r < 0 || r >= height || c < 0 || c >= width) {
 			return false;
 		} else {
@@ -103,11 +100,12 @@ public class Board {
 		}
 	}
 	
-	public void clearChanged() {
+	private void clearChanged() {
+		logger.trace("Clearing changed array");
 		changed = new boolean[height][width];
 	}
 
-	public boolean setChanged(Position p, boolean val) {
+	private boolean setChanged(Position p, boolean val) {
 		return setChanged(p.row, p.col, val);
 	}
 
@@ -178,7 +176,7 @@ public class Board {
 		return img;
 	}
 
-	public boolean swap(Position p1, Position p2) {
+	private boolean swap(Position p1, Position p2) {
 		if (p1.row >= height || p1.col >= width || p2.row >= height || p2.col >= width) {
 			return false;
 		}
@@ -197,22 +195,25 @@ public class Board {
 		return true;
 	}
 
-	public void unswap(Position p1, Position p2) {
-		if (swap(p1, p2)) {
-			changed[p1.row][p1.col] = false;
-			changed[p2.row][p2.col] = false;
-		}
-	}
-
 	private void match(Position p, MatchResult result) {
-
+		logger.timing("match() started");
+		Instant start = Instant.now();
+		
+		logger.debug("Looking for matches at Position " + p.toString());
+		
 		if (result.positions.contains(p)) {
+			logger.debug("Results already contain this Position");
+			Instant end = Instant.now();
+			logger.timing("match() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
 			return;
 		}
 
 		GemColor color = get(p);
 
 		if (color == GemColor.INVALID || color == GemColor.UNKNOWN) {
+			logger.debug("Gem is not a valid color");
+			Instant end = Instant.now();
+			logger.timing("match() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
 			return;
 		}
 
@@ -282,11 +283,14 @@ public class Board {
 		} else if (colMatches.size() >= 3) {
 			result.add(colMatches.size());
 		}
+		
+		Instant end = Instant.now();
+		logger.timing("match() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
 
 		return;
 	}
 
-	public MatchResult[] findMatches() {
+	private MatchResult[] findMatches() {
 		logger.timing("findMatches() started");
 		Instant start = Instant.now();
 
@@ -419,7 +423,9 @@ public class Board {
 	public double evaluateMove(Position p1, Position p2) {
 		Board b = new Board(this);
 		b.swap(p1, p2);
-		return b.evaluate();
+		double value = b.evaluate();
+		logger.info("Evaluated move " + p1 + " -> " + p2 + ": " + value);
+		return value;
 	}
 
 	/**
@@ -477,7 +483,7 @@ public class Board {
 		}
 
 		if (currentBestP1 != null && currentBestP2 != null) {
-			logger.info("Best move " + currentBestP1 + " -> " + currentBestP2 + " has a score of " + currentBest);
+			logger.info("Best move " + currentBestP1 + " -> " + currentBestP2 + ": " + currentBest);
 			retval = new Position[2];
 			retval[0] = currentBestP1;
 			retval[1] = currentBestP2;
@@ -492,9 +498,19 @@ public class Board {
 	}
 
 	public void move(Position p1, Position p2) {
+		boolean[][] oldChanged = changed;
 		clearChanged();
+		
 		swap(p1, p2);
-		removeMatches(true, ReplacementMethod.RANDOM, false);
+		MatchResult[] results = removeMatches(true, ReplacementMethod.RANDOM, false);
+		
+		if(results.length == 0) {
+			logger.info("Move " + p1 + " -> " + p2 + " is not a valid move");
+			swap(p1, p2);
+			changed = oldChanged;
+		} else {
+			logger.info("Made move " + p1 + " -> " + p2 + ": " + 0 );
+		}
 	}
 
 	public class MatchResult {

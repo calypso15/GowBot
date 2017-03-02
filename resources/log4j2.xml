@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="warn">
-  <!-- Define custom levels before using them for filtering below. -->
-  <CustomLevels>
-    <CustomLevel name="TIMING" intLevel="700" />
-  </CustomLevels>
- 
-  <Appenders>
-    <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d %level %logger{1} - %msg%n"/>
-    </Console>
-    <File name="MyFile" fileName="logs/app.log">
-      <PatternLayout pattern="%d %level %logger{1} - %msg%n"/>
-    </File>
-  </Appenders>
-  <Loggers>
-    <Root level="debug">
-      <AppenderRef ref="Console" level="info" />
-    </Root>
-  </Loggers>
+<Configuration status="WARN">
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d %level %logger{1} - %msg%n" />
+<!-- 			<Filters>
+				<ThresholdFilter level="TIMING" />
+				<ThresholdFilter level="TRACE" onMatch="DENY" onMismatch="NEUTRAL" />
+			</Filters> -->
+		</Console>
+		<File name="MyFile" fileName="logs/app.log">
+			<PatternLayout pattern="%d %level %logger{1} - %msg%n" />
+		</File>
+	</Appenders>
+	<Loggers>
+		<Root level="TRACE">
+			<AppenderRef ref="Console" level="INFO"/>
+		</Root>
+	</Loggers>
 </Configuration>
