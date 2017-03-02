@@ -100,7 +100,7 @@ public class Board implements IEvaluator {
 			return retval;
 		}
 	}
-	
+
 	private void clearChanged() {
 		logger.trace("Clearing changed array");
 		changed = new boolean[height][width];
@@ -109,11 +109,11 @@ public class Board implements IEvaluator {
 	private boolean setChanged(Position p, boolean val) {
 		return setChanged(p.row, p.col, val);
 	}
-	
+
 	public void setEvaluator(IEvaluator evaluator) {
 		this.evaluator = evaluator;
 	}
-	
+
 	public IEvaluator getEvaluator() {
 		return evaluator;
 	}
@@ -133,6 +133,32 @@ public class Board implements IEvaluator {
 				b.board[r][c] = GemColor.fromInt(array[r][c]);
 			}
 		}
+
+		return b;
+	}
+
+	public static Board random() {
+		Board b = new Board();
+		
+			for (int r = 0; r < b.height; ++r) {
+				for (int c = 0; c < b.width; ++c) {
+					b.set(r,  c, GemColor.random());
+					b.setChanged(r,  c, true);
+				}
+			}
+			
+		MatchResult[] results = b.findMatches();
+		while(results.length > 0) {
+			for(MatchResult result : results) {
+				for(Position p : result.getPositions()) {
+					b.set(p.row, p.col, GemColor.random()); 
+				}
+			}
+			
+			results = b.findMatches();
+		}
+		
+		b.clearChanged();
 
 		return b;
 	}
@@ -207,9 +233,9 @@ public class Board implements IEvaluator {
 	private void match(Position p, MatchResult result) {
 		logger.timing("match() started");
 		Instant start = Instant.now();
-		
+
 		logger.debug("Looking for matches at Position " + p.toString());
-		
+
 		if (result.contains(p)) {
 			logger.debug("Results already contain this Position");
 			Instant end = Instant.now();
@@ -292,7 +318,7 @@ public class Board implements IEvaluator {
 		} else if (colMatches.size() >= 3) {
 			result.add(colMatches.size());
 		}
-		
+
 		Instant end = Instant.now();
 		logger.timing("match() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
 
@@ -350,9 +376,9 @@ public class Board implements IEvaluator {
 
 		for (int r = 0; r < height; ++r) {
 			for (int c = 0; c < width; ++c) {
-				if(get(r,c) == GemColor.UNKNOWN) {
+				if (get(r, c) == GemColor.UNKNOWN) {
 					setChanged(r, c, true);
-					
+
 					if (method == ReplacementMethod.UNKNOWN) {
 						// do nothing
 					} else if (method == ReplacementMethod.RANDOM) {
@@ -385,8 +411,8 @@ public class Board implements IEvaluator {
 			}
 
 			collapse(method);
-			
-			if(render) {
+
+			if (render) {
 				Util.displayImage(this.toImage());
 			}
 		} while (cascading && results.length > 0);
@@ -396,7 +422,7 @@ public class Board implements IEvaluator {
 
 		return allResults.toArray(new MatchResult[0]);
 	}
-	
+
 	public double evaluate(MatchResult[] results) {
 		double value = 0;
 		Set<Position> allMatches = new TreeSet<Position>();
@@ -414,7 +440,7 @@ public class Board implements IEvaluator {
 				extraTurn = true;
 			}
 
-			for(Position p : result.getPositions()) {
+			for (Position p : result.getPositions()) {
 				allMatches.add(p);
 			}
 		}
@@ -506,19 +532,18 @@ public class Board implements IEvaluator {
 	public void move(Position p1, Position p2) {
 		boolean[][] oldChanged = changed;
 		clearChanged();
-		
+
 		swap(p1, p2);
 		MatchResult[] results = removeMatches(true, ReplacementMethod.RANDOM, false);
-		
-		if(results.length == 0) {
+
+		if (results.length == 0) {
 			logger.info("Move " + p1 + " -> " + p2 + " is not a valid move");
 			swap(p1, p2);
 			changed = oldChanged;
 		} else {
 			double val = evaluator.evaluate(results);
-			logger.info("Made move " + p1 + " -> " + p2 + ": " + val );
+			logger.info("Made move " + p1 + " -> " + p2 + ": " + val);
 		}
 	}
-
 
 }

@@ -25,7 +25,8 @@ public class GowBot {
 				{ 2, 2, 1, 2, 2, 1, 1, 2 }, 
 				{ 1, 1, 2, 1, 1, 2, 2, 1 } };
 		
-		Board board = Board.fromArray(a);
+//		Board board = Board.fromArray(a);
+		Board board = Board.random();
 
 		Troop warlock = Troop.name("Warlock")
 			.life(19)
@@ -56,7 +57,7 @@ public class GowBot {
 		Team playerTeam = new Team() {
 			@Override
 			public double evaluate(MatchResult[] results) {
-				double[] weight = new double[] {0, 2, 1, 1, 2, 1, 1, 1};
+				double[] weight = new double[] {0, 2, 0, 1, 2, 0, 1, 1};
 				double value = 0;
 				Set<Position> allMatches = new TreeSet<Position>();
 
