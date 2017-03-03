@@ -55,7 +55,7 @@ public class Board implements IEvaluator {
 
 	public GemColor get(int r, int c) {
 		if (r < 0 || r >= height || c < 0 || c >= width) {
-			return GemColor.INVALID;
+			return null;
 		} else {
 			return (board[r][c]);
 		}
@@ -67,7 +67,7 @@ public class Board implements IEvaluator {
 
 	private GemColor set(int r, int c, GemColor val) {
 		if (r < 0 || r >= height || c < 0 || c >= width) {
-			return GemColor.INVALID;
+			return null;
 		} else {
 			GemColor retval = board[r][c];
 			board[r][c] = val;
@@ -245,7 +245,7 @@ public class Board implements IEvaluator {
 
 		GemColor color = get(p);
 
-		if (color == GemColor.INVALID || color == GemColor.UNKNOWN) {
+		if (color == null || color == GemColor.UNKNOWN) {
 			logger.debug("Gem is not a valid color");
 			Instant end = Instant.now();
 			logger.timing("match() completed in " + Duration.between(start, end).toMillis() + " milliseconds");
@@ -431,7 +431,7 @@ public class Board implements IEvaluator {
 
 		for (MatchResult result : results) {
 			for (GemColor g : GemColor.values()) {
-				if (g != GemColor.INVALID) {
+				if (g != null) {
 					value += result.get(g);
 				}
 			}

@@ -6,10 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public enum GemColor {
-	INVALID(-1), UNKNOWN(0), RED(1), GREEN(2), BLUE(3), YELLOW(4), PURPLE(5), BROWN(6), SKULL(7);
-	
-	public static final int MIN = 1;
-	public static final int MAX = 7;
+	UNKNOWN(0), RED(1), GREEN(2), BLUE(3), YELLOW(4), PURPLE(5), BROWN(6), SKULL(7);
 
 	private final int i;
 	private static Map<Integer, GemColor> map = new HashMap<Integer, GemColor>();
@@ -37,7 +34,7 @@ public enum GemColor {
 	}
 	
 	static GemColor random() {
-		return fromInt(ThreadLocalRandom.current().nextInt(MIN, MAX + 1));
+		return fromInt(ThreadLocalRandom.current().nextInt(1, 8));
 	}
 
 	static Color toColor(GemColor c) {
@@ -58,7 +55,6 @@ public enum GemColor {
 			return Color.decode("0xA52A2A");
 		case SKULL:
 			return Color.white;
-		case INVALID:
 		default:
 			return Color.black;
 		}

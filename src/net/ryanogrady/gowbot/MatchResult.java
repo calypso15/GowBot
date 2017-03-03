@@ -38,12 +38,9 @@ public class MatchResult {
 		case SKULL:
 			return skull;
 		case UNKNOWN:
-		case INVALID:
 		default:
-			break;
+			return 0;
 		}
-
-		return 0;
 	}
 
 	public int get(int c) {
@@ -98,7 +95,6 @@ public class MatchResult {
 			skull += n;
 			break;
 		case UNKNOWN:
-		case INVALID:
 		default:
 			break;
 		}

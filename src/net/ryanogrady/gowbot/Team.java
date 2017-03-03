@@ -1,23 +1,34 @@
 package net.ryanogrady.gowbot;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
 public class Team implements IEvaluator {
+	static ExtLogger logger = ExtLogger.create(Team.class);
+	
 	public final int MAX_TROOPS = 4;
 
-	private Troop[] troops = new Troop[MAX_TROOPS];
+	private List<Troop> troops = new ArrayList<Troop>(MAX_TROOPS);
 
 	public Team() {
+		for(int i = 0; i < MAX_TROOPS; ++i) {
+			troops.add(null);
+		}
 	}
 
 	public Troop getTroop(int index) {
-		return troops[index];
+		return troops.get(index);
+	}
+	
+	public Troop[] getTroops() {
+		return troops.toArray(new Troop[0]);
 	}
 
 	public boolean hasOpening() {
 		for (int i = 0; i < MAX_TROOPS; ++i) {
-			if (troops[i] == null) {
+			if (troops.get(i) == null) {
 				return true;
 			}
 		}
@@ -27,8 +38,8 @@ public class Team implements IEvaluator {
 
 	public boolean addTroop(Troop troop) {
 		for (int i = 0; i < MAX_TROOPS; ++i) {
-			if (troops[i] == null) {
-				troops[i] = new Troop(troop);
+			if (troops.get(i) == null) {
+				troops.set(i, new Troop(troop));
 				return true;
 			}
 		}
@@ -37,8 +48,8 @@ public class Team implements IEvaluator {
 	}
 
 	public boolean addTroop(Troop troop, int index) {
-		if (troops[index] == null) {
-			troops[index] = troop;
+		if (troops.get(index) == null) {
+			troops.set(index, new Troop(troop));
 			return true;
 		} else {
 			return false;
@@ -46,8 +57,8 @@ public class Team implements IEvaluator {
 	}
 
 	public boolean removeTroop(int index) {
-		if (troops[index] != null) {
-			troops[index] = null;
+		if (troops.get(index) != null) {
+			troops.set(index, null);
 			return true;
 		} else {
 			return false;
@@ -55,17 +66,36 @@ public class Team implements IEvaluator {
 	}
 	
 	public void reorder(int[] order) {
-		Troop[] newTroops = new Troop[MAX_TROOPS];
+		List<Troop> newTroops = new ArrayList<Troop>(MAX_TROOPS);
 		
 		for(int i = 0; i < MAX_TROOPS; ++i) {
-			newTroops[i] = troops[order[i]];
+			newTroops.set(i, troops.get(order[i]));
 		}
 		
 		troops = newTroops;
 	}
 
 	@Override
-	public double evaluate(MatchResult[] results) {
+	public double evaluate(MatchResult[] results) {		
+		double[] weights = new double[] { 0, 0, 0, 0, 0, 0, 0, 1 };
+		for(GemColor g : GemColor.values()) {
+			for(Troop t : troops) {
+				for(GemColor g2 : t.getColors()) {
+					if(g == g2) {
+						weights[g.getValue()] = 1.0;
+					}
+				}
+			}
+		}
+		
+		StringBuilder sb = new StringBuilder("Evaluating board with weights [");
+		for(double d : weights) {
+			sb.append(d + ", ");
+		}
+		sb.delete(sb.length() - 2, sb.length());
+		sb.append("]");
+		logger.debug(sb.toString());
+	
 		double value = 0;
 		Set<Position> allMatches = new TreeSet<Position>();
 
@@ -73,9 +103,7 @@ public class Team implements IEvaluator {
 
 		for (MatchResult result : results) {
 			for (GemColor g : GemColor.values()) {
-				if (g != GemColor.INVALID) {
-					value += result.get(g);
-				}
+				value += result.get(g) * weights[g.getValue()];
 			}
 
 			if (result.get(4) > 0 || result.get(5) > 0) {
